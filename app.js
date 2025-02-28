@@ -78,7 +78,7 @@ if (!SpeechRecognition) {
 
 // Fetch Weather Data using OpenWeatherMap API
 async function getWeather(city) {
-    const geocodeUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${OPENWEATHERMAP_API_KEY}`;
+    const geocodeUrl = `YOUR_OPENWEATHERMAP_API_KEY`;
     try {
         // Step 1: Get latitude and longitude for the city
         const geocodeResponse = await fetch(geocodeUrl);
@@ -90,7 +90,7 @@ async function getWeather(city) {
         const { lat, lon } = geocodeData[0];
 
         // Step 2: Fetch weather data using lat and lon
-        const weatherUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&appid=${OPENWEATHERMAP_API_KEY}&units=metric`;
+        const weatherUrl = `YOUR_OPENWEATHERMAP_API_KEY`;
         const weatherResponse = await fetch(weatherUrl);
         const weatherData = await weatherResponse.json();
 
@@ -109,7 +109,7 @@ async function getWeather(city) {
 
 // Fetch News Data using NewsAPI
 async function getNews() {
-    const url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${NEWSAPI_API_KEY}`;
+    const url = `Your NewsAPI key`;
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -228,6 +228,15 @@ function takeCommand(message) {
             window.open("https://youtube.com", "_blank");
             speak("Opening Youtube...");
         },
+        "open linkedin": () => {
+            window.open("https://in.linkedin.com", "_blank");
+            speak("Opening Linkedin...");
+        },
+        "open instagram": () => {
+            window.open("https://www.instagram.com", "_blank");
+            speak("Opening Insagram...");
+        },
+
         "open facebook": () => {
             window.open("https://facebook.com", "_blank");
             speak("Opening Facebook...");
