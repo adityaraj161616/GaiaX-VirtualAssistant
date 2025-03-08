@@ -1,10 +1,15 @@
 const btn = document.querySelector('.talk');
 const content = document.querySelector('.content');
+const mainSection = document.querySelector('.main');
+const searchResultsSection = document.querySelector('.search-results');
+const resultsContent = document.getElementById('results-content');
+const copyButton = document.getElementById('copy-button');
+const searchResultsContainer = document.getElementById('search-results-container');
 
 // API Keys
-const OPENWEATHERMAP_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY";
-const NEWSAPI_API_KEY = "Your NewsAPI key";
-const OPENAI_API_KEY = "Your OpenAI API key";
+const OPENWEATHERMAP_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"; // OpenWeatherMap API key
+const NEWSAPI_API_KEY = " Your NewsAPI key"; // NewsAPI key
+const GEMINI_API_KEY = " Your Gemini API key"; // Gemini API key
 
 // Speech Synthesis
 let currentSpeech = null; // Track the current speech
@@ -78,7 +83,7 @@ if (!SpeechRecognition) {
 
 // Fetch Weather Data using OpenWeatherMap API
 async function getWeather(city) {
-    const geocodeUrl = `YOUR_OPENWEATHERMAP_API_KEY`;
+    const geocodeUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${OPENWEATHERMAP_API_KEY}`;
     try {
         // Step 1: Get latitude and longitude for the city
         const geocodeResponse = await fetch(geocodeUrl);
@@ -90,7 +95,7 @@ async function getWeather(city) {
         const { lat, lon } = geocodeData[0];
 
         // Step 2: Fetch weather data using lat and lon
-        const weatherUrl = `YOUR_OPENWEATHERMAP_API_KEY`;
+        const weatherUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&appid=${OPENWEATHERMAP_API_KEY}&units=metric`;
         const weatherResponse = await fetch(weatherUrl);
         const weatherData = await weatherResponse.json();
 
@@ -109,7 +114,7 @@ async function getWeather(city) {
 
 // Fetch News Data using NewsAPI
 async function getNews() {
-    const url = `Your NewsAPI key`;
+    const url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${NEWSAPI_API_KEY}`;
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -125,29 +130,30 @@ async function getNews() {
     }
 }
 
-// OpenAI Integration
-async function askOpenAI(prompt) {
-    const url = "https://api.openai.com/v1/chat/completions";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`
+// Gemini API Integration
+async function askGemini(prompt) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const headers = { 'Content-Type': 'application/json' };
+    const data = {
+        "contents": [
+            {
+                "parts": [
+                    { "text": prompt }
+                ]
+            }
+        ]
     };
-    const body = JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 150
-    });
 
     try {
-        const response = await fetch(url, { method: "POST", headers, body });
-        const data = await response.json();
-        if (data.choices && data.choices.length > 0) {
-            return data.choices[0].message.content.trim();
+        const response = await fetch(url, { method: "POST", headers, body: JSON.stringify(data) });
+        const responsedata = await response.json();
+        if (responsedata.candidates && responsedata.candidates.length > 0) {
+            return responsedata.candidates[0].content.parts[0].text.trim();
         } else {
             return "Sorry, I couldn't generate a response.";
         }
     } catch (error) {
-        console.error("Error fetching OpenAI response:", error);
+        console.error("Error fetching Gemini response:", error);
         return "Sorry, I couldn't connect to the AI service.";
     }
 }
@@ -184,7 +190,7 @@ function updateHistoryUI() {
             // Handle click on history item (e.g., reload the chat)
             alert(`You clicked: ${item}`);
         });
-        historyList.appendChild(li);
+        historyList.prepend(li);
     });
 }
 
@@ -236,7 +242,6 @@ function takeCommand(message) {
             window.open("https://www.instagram.com", "_blank");
             speak("Opening Insagram...");
         },
-
         "open facebook": () => {
             window.open("https://facebook.com", "_blank");
             speak("Opening Facebook...");
@@ -269,20 +274,19 @@ function takeCommand(message) {
         },
         "search": () => {
             const query = message.replace("search", "").trim();
-            window.open(`https://www.google.com/search?q=${query.replace(" ", "+")}`, "_blank");
-            speak("Searching the web for " + query);
+            performSearch(query);
         },
         "stop": () => {
             stopSpeech();
         },
         "write a note": async () => {
-            const note = await askOpenAI("Write a note about: " + message.replace("write a note", "").trim());
+            const note = await askGemini("Write a note about: " + message.replace("write a note", "").trim());
             writeNoteToFile(note);
             speak("Note written and saved to your computer.");
         },
         "ask": async () => {
             const question = message.replace("ask", "").trim();
-            const response = await askOpenAI(question);
+            const response = await askGemini(question);
             speak(response);
         }
     };
@@ -294,12 +298,57 @@ function takeCommand(message) {
         }
     }
 
-    // Fallback to OpenAI for general queries
+    // Fallback to Gemini for general queries
     speak("Let me think about that...");
-    askOpenAI(message).then(response => speak(response));
+    askGemini(message).then(response => {
+        speak(response);
+        displaySearchResults(response);
+    });
 }
+
+// Perform search and display results
+async function performSearch(query) {
+    speak(`Searching for ${query}...`);
+    const response = await askGemini(query);
+    displaySearchResults(response);
+}
+
+// Display search results
+function displaySearchResults(results) {
+    const resultBox = document.createElement('div');
+    resultBox.className = 'search-result-box fade-in';
+    resultBox.textContent = results.split('\n')[0]; // Show only the first paragraph
+    resultBox.addEventListener('click', () => {
+        resultsContent.innerHTML = `<div class="result-box">${results}</div>`;
+        mainSection.classList.add('shift-left');
+        searchResultsSection.classList.add('open');
+    });
+    searchResultsContainer.innerHTML = ''; // Clear previous results
+    searchResultsContainer.appendChild(resultBox);
+}
+
+// Copy search results to clipboard
+copyButton.addEventListener('click', () => {
+    const text = resultsContent.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        speak("Results copied to clipboard.");
+    }).catch(err => {
+        console.error("Error copying text: ", err);
+        speak("Failed to copy results.");
+    });
+});
 
 // Load history when the page loads
 window.addEventListener("load", () => {
     updateHistoryUI();
+});
+
+// Handle click on search result box to fade out and transition back
+searchResultsSection.addEventListener('click', () => {
+    searchResultsSection.classList.add('fade-out');
+    setTimeout(() => {
+        searchResultsSection.classList.remove('open', 'fade-out');
+        mainSection.classList.remove('shift-left');
+        resultsContent.innerHTML = '';
+    }, 500); // Match the duration of the fade-out animation
 });
