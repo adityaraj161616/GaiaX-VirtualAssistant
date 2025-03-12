@@ -1,18 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wdth,wght@87.5,200..900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap");
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: "Inconsolata", monospace;
+    font-optical-sizing: auto;
+    font-weight: 400; /* Default weight */
+    font-style: normal;
+    font-variation-settings: "wdth" 87.5;
+}
+
+h1, p {
     font-family: "Orbitron", sans-serif;
 }
 
 body {
-    background: #000;
-    color: #fff;
+    background-color: black;
 }
-
-/* Sidebar Styles */
 
 /* Sidebar Header */
 .sidebar-header {
@@ -108,7 +114,7 @@ body {
 .main .image-container .image img {
     width: 300px;
     border-radius: 50%;
-    animation: float 4s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite, bounce 2s infinite;
 }
 
 @keyframes float {
@@ -117,6 +123,15 @@ body {
     }
     50% {
         transform: translateY(-20px);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-60px);
     }
 }
 
@@ -231,8 +246,7 @@ body {
     right: 0;
     width: 50%;
     height: 100vh;
-    background-color: #2c3e50;
-    color: #ecf0f1;
+    background-color: #2c3e50;background-color: rgb(30 187 155 / 30%);color: #ecf0f1;
     padding: 20px;
     overflow-y: auto;
     transition: transform 0.5s ease, opacity 0.5s ease;
@@ -266,7 +280,7 @@ body {
 }
 
 #copy-button:hover {
-    background-color: #16a085;
+    background-color: #86aca5;
 }
 
 /* Animation for shifting main content */
@@ -277,7 +291,7 @@ body {
 
 /* Result Box Styles */
 .result-box {
-    background-color: #34495e;
+    ackground-color: #0b131c;
     color: #ecf0f1;
     padding: 8px;
     margin: 16px 0px;

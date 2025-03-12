@@ -5,11 +5,12 @@ const searchResultsSection = document.querySelector('.search-results');
 const resultsContent = document.getElementById('results-content');
 const copyButton = document.getElementById('copy-button');
 const searchResultsContainer = document.getElementById('search-results-container');
+const inputDiv = document.querySelector('.input');
 
 // API Keys
-const OPENWEATHERMAP_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"; // OpenWeatherMap API key
-const NEWSAPI_API_KEY = " Your NewsAPI key"; // NewsAPI key
-const GEMINI_API_KEY = " Your Gemini API key"; // Gemini API key
+const OPENWEATHERMAP_API_KEY = "OpenWeatherMap API key"; // OpenWeatherMap API key
+const NEWSAPI_API_KEY = "NewsAPI key"; // NewsAPI key
+const GEMINI_API_KEY = "Gemini API key"; // Gemini API key
 
 // Speech Synthesis
 let currentSpeech = null; // Track the current speech
@@ -37,7 +38,6 @@ function stopSpeech() {
     if (currentSpeech) {
         window.speechSynthesis.cancel();
         currentSpeech = null;
-        speak("Speech stopped.");
     }
 }
 
@@ -57,6 +57,8 @@ window.addEventListener('load', () => {
 
 // Speech Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognitionActive = false;
+
 if (!SpeechRecognition) {
     content.textContent = "Your browser does not support speech recognition. Please use Chrome or Edge.";
 } else {
@@ -68,16 +70,30 @@ if (!SpeechRecognition) {
         const transcript = event.results[0][0].transcript;
         content.textContent = transcript;
         takeCommand(transcript.toLowerCase());
+        recognitionActive = false;
     };
 
     recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
         content.textContent = "Sorry, I couldn't understand you. Please try again.";
+        recognitionActive = false;
     };
 
     btn.addEventListener('click', () => {
-        content.textContent = "Listening...";
-        recognition.start();
+        if (currentSpeech) {
+            stopSpeech();
+            content.textContent = "Speech stopped.";
+        } else {
+            if (recognitionActive) {
+                recognition.stop();
+                content.textContent = "Stopped listening.";
+                recognitionActive = false;
+            } else {
+                content.textContent = "Listening...";
+                recognition.start();
+                recognitionActive = true;
+            }
+        }
     });
 }
 
@@ -209,7 +225,7 @@ function takeCommand(message) {
     const commands = {
         "hey": () => speak("Hello Sir, How May I Help You?"),
         "hello": () => speak("Hello Sir, How May I Help You?"),
-        "what can you do": () => {
+        "what you can do": () => {
             const abilities = [
                 "I can open Google for you.",
                 "I can open YouTube for you.",
@@ -351,4 +367,12 @@ searchResultsSection.addEventListener('click', () => {
         mainSection.classList.remove('shift-left');
         resultsContent.innerHTML = '';
     }, 500); // Match the duration of the fade-out animation
+});
+
+// Stop speech and clear search results when clicking on the input div
+inputDiv.addEventListener('click', () => {
+    stopSpeech();
+    searchResultsContainer.innerHTML = ''; // Clear search results
+    searchResultsSection.classList.remove('open');
+    mainSection.classList.remove('shift-left');
 });
